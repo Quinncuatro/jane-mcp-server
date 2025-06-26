@@ -39,5 +39,17 @@ export function generateFrontmatter(meta: DocumentMeta, content: string): string
     updatedMeta.createdAt = updatedMeta.updatedAt;
   }
   
-  return matter.stringify(content, updatedMeta);
+  // Sanitize metadata by removing undefined values
+  // to prevent YAML serialization errors
+  const sanitizedMeta: DocumentMeta = {
+    title: updatedMeta.title || 'Untitled Document'
+  };
+  
+  Object.entries(updatedMeta).forEach(([key, value]) => {
+    if (value !== undefined) {
+      sanitizedMeta[key] = value;
+    }
+  });
+  
+  return matter.stringify(content, sanitizedMeta);
 }
