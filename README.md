@@ -99,6 +99,17 @@ The actual markdown content goes here.
 8. Save the config file and restart Claude Desktop
 9. Look for the slider icon in the input box to access Jane's functionality
 
+#### Troubleshooting
+
+If you encounter issues with Claude Desktop not finding documents or returning empty results:
+
+1. Check the Claude Desktop logs for error messages
+2. Verify the Jane directory structure exists at `/path-to-project/Jane/`
+3. The server automatically creates test documents when started
+4. If documents are still not appearing, try rebuilding the project and restarting Claude Desktop:```bash
+npm run build && npm start
+```
+
 ### Claude Code
 
 1. Start the Jane MCP server
@@ -109,6 +120,18 @@ claude-code --mcp=node /path/to/jane/dist/index.js
 ```
 
 3. Claude Code will now have access to all of Jane's tools and resources
+
+#### Troubleshooting
+
+If you encounter issues with Claude Code not finding documents or returning empty results:
+
+1. Check the terminal output for error messages from the Jane MCP server
+2. Verify that the Jane directory exists where expected (console.error logs will show the path)
+3. You can manually trigger Jane to create test documents by modifying src/server.ts
+4. Try rebuilding and restarting the server:
+```bash
+npm run build && npm start
+```
 
 ## Available Tools
 

@@ -3,11 +3,24 @@ import path from 'path';
 import { glob } from 'glob';
 import { Document, DocumentType, DocumentMeta } from '../types.js';
 import { parseFrontmatter, generateFrontmatter } from './frontmatter.js';
+import { fileURLToPath } from 'url';
 
-// Base directory for Jane documents
-export const JANE_DIR = path.resolve(process.cwd(), 'Jane');
+// Get the directory name of the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Base directory for Jane documents - using absolute path relative to script location
+// This ensures it works regardless of the working directory
+export const JANE_DIR = path.resolve(__dirname, '../../../Jane');
 export const STDLIB_DIR = path.join(JANE_DIR, 'stdlib');
 export const SPECS_DIR = path.join(JANE_DIR, 'specs');
+
+// Debug log to help troubleshoot (will show in Claude Desktop logs)
+console.error(`Jane directories:
+  JANE_DIR: ${JANE_DIR}
+  STDLIB_DIR: ${STDLIB_DIR}
+  SPECS_DIR: ${SPECS_DIR}
+`);
 
 /**
  * Get the absolute path for a document
@@ -40,6 +53,7 @@ export async function readDocument(type: DocumentType, subpath: string): Promise
       meta
     };
   } catch (error) {
+    console.error(`Error reading document at ${fullPath}:`, error);
     return null;
   }
 }
@@ -119,18 +133,28 @@ export async function listDocuments(type: DocumentType, subpath: string = ''): P
   const searchPath = path.join(baseDir, subpath);
   
   try {
+    // Check if directory exists
+    const dirExists = await fs.pathExists(searchPath);
+    if (!dirExists) {
+      console.error(`Directory does not exist: ${searchPath}`);
+      await ensureJaneStructure(); // Ensure the directory structure exists
+      return [];
+    }
+
     // Find all markdown files in the directory (and subdirectories)
     const files = await glob('**/*.md', {
       cwd: searchPath,
       absolute: false
     });
     
+    console.error(`Found ${files.length} markdown files in ${searchPath}`);
+    
     // If we're searching in a subpath, prepend it to each result
     return subpath
       ? files.map(file => path.join(subpath, file))
       : files;
   } catch (error) {
-    console.error('Error listing documents:', error);
+    console.error(`Error listing documents in ${searchPath}:`, error);
     return [];
   }
 }
@@ -141,10 +165,20 @@ export async function listDocuments(type: DocumentType, subpath: string = ''): P
  */
 export async function listLanguages(): Promise<string[]> {
   try {
+    // Check if directory exists
+    const dirExists = await fs.pathExists(STDLIB_DIR);
+    if (!dirExists) {
+      console.error(`Directory does not exist: ${STDLIB_DIR}`);
+      await ensureJaneStructure();
+    }
+
     const entries = await fs.readdir(STDLIB_DIR, { withFileTypes: true });
-    return entries
+    const languages = entries
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name);
+    
+    console.error(`Found languages: ${languages.join(', ')}`);
+    return languages;
   } catch (error) {
     console.error('Error listing languages:', error);
     return [];
@@ -157,10 +191,20 @@ export async function listLanguages(): Promise<string[]> {
  */
 export async function listProjects(): Promise<string[]> {
   try {
+    // Check if directory exists
+    const dirExists = await fs.pathExists(SPECS_DIR);
+    if (!dirExists) {
+      console.error(`Directory does not exist: ${SPECS_DIR}`);
+      await ensureJaneStructure();
+    }
+
     const entries = await fs.readdir(SPECS_DIR, { withFileTypes: true });
-    return entries
+    const projects = entries
       .filter(entry => entry.isDirectory())
       .map(entry => entry.name);
+    
+    console.error(`Found projects: ${projects.join(', ')}`);
+    return projects;
   } catch (error) {
     console.error('Error listing projects:', error);
     return [];
@@ -183,6 +227,8 @@ export async function ensureJaneStructure(): Promise<void> {
     // Create default project directories if they don't exist
     await fs.ensureDir(path.join(SPECS_DIR, 'project1'));
     await fs.ensureDir(path.join(SPECS_DIR, 'project2'));
+
+    console.error('Jane directory structure created successfully.');
   } catch (error) {
     console.error('Error ensuring Jane structure:', error);
   }

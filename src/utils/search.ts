@@ -1,5 +1,5 @@
 import { Document, DocumentType, SearchResult } from '../types.js';
-import { listDocuments, readDocument } from './filesystem.js';
+import { listDocuments, readDocument, listLanguages, listProjects } from './filesystem.js';
 
 /**
  * Simple in-memory document index 
@@ -15,21 +15,53 @@ class DocumentIndex {
   async initialize(): Promise<void> {
     if (this.initialized) return;
     
-    // Load stdlib documents
-    const stdlibPaths = await listDocuments('stdlib');
-    for (const path of stdlibPaths) {
-      const doc = await readDocument('stdlib', path);
-      if (doc) this.documents.push(doc);
-    }
+    console.error('Initializing document index...');
+    this.documents = [];
     
-    // Load spec documents
-    const specPaths = await listDocuments('spec');
-    for (const path of specPaths) {
-      const doc = await readDocument('spec', path);
-      if (doc) this.documents.push(doc);
+    try {
+      // Get list of languages first
+      const languages = await listLanguages();
+      console.error(`Found ${languages.length} languages: ${languages.join(', ')}`);
+      
+      // Load stdlib documents for each language
+      for (const language of languages) {
+        const langDocPaths = await listDocuments('stdlib', language);
+        console.error(`Found ${langDocPaths.length} stdlib documents in ${language} to index`);
+        
+        for (const path of langDocPaths) {
+          const doc = await readDocument('stdlib', path);
+          if (doc) {
+            this.documents.push(doc);
+            console.error(`Indexed stdlib document: ${path}`);
+          }
+        }
+      }
+      
+      // Get list of projects first
+      const projects = await listProjects();
+      console.error(`Found ${projects.length} projects: ${projects.join(', ')}`);
+      
+      // Load spec documents for each project
+      for (const project of projects) {
+        const projDocPaths = await listDocuments('spec', project);
+        console.error(`Found ${projDocPaths.length} spec documents in ${project} to index`);
+        
+        for (const path of projDocPaths) {
+          const doc = await readDocument('spec', path);
+          if (doc) {
+            this.documents.push(doc);
+            console.error(`Indexed spec document: ${path}`);
+          }
+        }
+      }
+      
+      console.error(`Document index initialized with ${this.documents.length} total documents`);
+      this.initialized = true;
+    } catch (error) {
+      console.error('Error initializing document index:', error);
+      // Still mark as initialized to prevent repeated failures
+      this.initialized = true;
     }
-    
-    this.initialized = true;
   }
   
   /**
@@ -42,8 +74,10 @@ class DocumentIndex {
     
     if (index >= 0) {
       this.documents[index] = doc;
+      console.error(`Updated document in index: ${doc.type}://${doc.path}`);
     } else {
       this.documents.push(doc);
+      console.error(`Added new document to index: ${doc.type}://${doc.path}`);
     }
   }
   
@@ -51,9 +85,14 @@ class DocumentIndex {
    * Remove a document from the index
    */
   removeDocument(type: DocumentType, path: string): void {
+    const initialCount = this.documents.length;
     this.documents = this.documents.filter(
       d => !(d.type === type && d.path === path)
     );
+    
+    if (initialCount !== this.documents.length) {
+      console.error(`Removed document from index: ${type}://${path}`);
+    }
   }
   
   /**
@@ -69,9 +108,47 @@ class DocumentIndex {
     } = {}
   ): SearchResult[] {
     const { type, language, project, includeContent = false } = options;
-    const searchTerms = query.toLowerCase().split(/\s+/);
     
-    return this.documents
+    // Log search parameters
+    console.error(`Search query: "${query}" (Options: ${JSON.stringify(options)})`);
+    console.error(`Available documents: ${this.documents.length}`);
+    
+    // Handle wildcard searches
+    if (query === '*' || query === '') {
+      console.error('Processing wildcard search - returning all documents that match filters');
+      
+      // For wildcard, just apply filters without content matching
+      return this.documents
+        .filter(doc => {
+          // Apply filters
+          if (type && doc.type !== type) return false;
+          
+          if (language && doc.type === 'stdlib') {
+            const parts = doc.path.split('/');
+            if (parts[0] !== language) return false;
+          }
+          
+          if (project && doc.type === 'spec') {
+            const parts = doc.path.split('/');
+            if (parts[0] !== project) return false;
+          }
+          
+          return true;
+        })
+        .map(doc => ({
+          document: {
+            ...doc,
+            content: includeContent ? doc.content : ''
+          }
+        }))
+        .sort((a, b) => a.document.meta.title.localeCompare(b.document.meta.title));
+    }
+    
+    // Regular search
+    const searchTerms = query.toLowerCase().split(/\s+/);
+    console.error(`Search terms: ${searchTerms.join(', ')}`);
+    
+    const results = this.documents
       .filter(doc => {
         // Apply filters
         if (type && doc.type !== type) return false;
@@ -141,6 +218,9 @@ class DocumentIndex {
         // Fall back to alphabetical by title
         return a.document.meta.title.localeCompare(b.document.meta.title);
       });
+    
+    console.error(`Search found ${results.length} matching documents`);
+    return results;
   }
 }
 
