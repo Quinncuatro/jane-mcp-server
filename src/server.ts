@@ -4,12 +4,19 @@ import { documentIndex } from './utils/search.js';
 import { implementResources } from './resources/index.js';
 import { implementTools } from './tools/index.js';
 import { createTestDocument } from './utils/test-helpers.js';
+import logger from './utils/logger.js';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+// Get the directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Initialize test documents to ensure the server has content
  */
 async function initializeTestDocuments(): Promise<void> {
-  console.error('Checking for test documents...');
+  logger.info('Checking for test documents...');
   
   // Create test documents for each language
   await createTestDocument(
@@ -88,7 +95,7 @@ async function initializeTestDocuments(): Promise<void> {
     '4. Authentication Service (OAuth2)'
   );
   
-  console.error('Test documents initialized');
+  logger.success('Test documents initialized');
 }
 
 /**
@@ -103,20 +110,41 @@ export async function createServer(): Promise<McpServer> {
     description: 'Knowledge management server for stdlib and specs'
   });
 
+  // Log environment information for debugging
+  logger.startup('Jane MCP Server Starting');
+  logger.header('Environment Information');
+  logger.info(`Node version: ${process.version}`);
+  logger.info(`Platform: ${process.platform}-${process.arch}`);
+  logger.info(`Current working directory: ${process.cwd()}`);
+  logger.info(`Script directory: ${__dirname}`);
+  
   // Ensure the Jane directory structure exists
-  await ensureJaneStructure();
+  logger.header('Directory Setup');
+  const structureCreated = await ensureJaneStructure();
+  
+  if (!structureCreated) {
+    logger.warning('Failed to create Jane directory structure. Document operations may fail.');
+  } else {
+    logger.success('Jane directory structure verified');
+  }
   
   // Create some test documents if needed
   await initializeTestDocuments();
   
   // Initialize the document index
+  logger.info('Initializing document index...');
   await documentIndex.initialize();
+  logger.success('Document index initialized');
   
   // Register resources for stdlib and specs
+  logger.info('Registering document resources...');
   implementResources(server);
+  logger.success('Resources registered');
   
   // Register tools for interacting with documents
+  logger.info('Registering document tools...');
   implementTools(server);
+  logger.success('Tools registered');
   
   return server;
 }

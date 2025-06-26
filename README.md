@@ -24,6 +24,28 @@ npm install
 npm run build
 ```
 
+## Configuration
+
+Jane supports several configuration options for document storage:
+
+### Environment Variables
+
+- `JANE_DIR`: Set the absolute path where Jane should store documents
+  - Example: `JANE_DIR=/path/to/documents node dist/index.js`
+
+### Path Resolution Strategy
+
+If `JANE_DIR` is not set, Jane will attempt to find a suitable storage location in the following order:
+
+1. `./Jane/` in the current working directory
+2. `./Jane/` in the project root (two levels up from utils)
+3. `./Jane/` in the parent directory of the current working directory
+
+This robust path resolution ensures Jane works correctly in various environments:
+- Local development: Documents are stored in `./Jane/` relative to the project root
+- MCP clients: Documents are properly found regardless of the MCP client's working directory
+- Docker: Documents can be stored in a mounted volume by setting `JANE_DIR`
+
 ## Usage
 
 ```bash
@@ -40,7 +62,7 @@ jane/
 ├── src/               # Source code
 ├── dist/              # Compiled JavaScript
 ├── tests/             # Test files
-└── Jane/              # Knowledge base
+└── Jane/              # Knowledge base (portable document store)
     ├── stdlib/        # Standard library documents by language
     │   ├── javascript/
     │   ├── typescript/
@@ -49,6 +71,22 @@ jane/
         ├── project1/
         └── project2/
 ```
+
+### Path Resolution
+
+Jane uses relative paths from the project root to ensure portability:
+
+- **Project Root**: The directory where `.git/` lives (typically the repo clone location)
+- **Document Store**: `./Jane/` (relative to project root)
+- **Standard Library**: `./Jane/stdlib/{language}/{filename}`
+- **Specifications**: `./Jane/specs/{project}/{filename}`
+
+This relative path approach ensures:
+- Portability across different development environments
+- Compatibility with Docker containerization
+- Easy distribution to other users
+
+The server automatically creates the `Jane/` directory structure if it doesn't exist.
 
 ## Document Format
 
@@ -104,11 +142,38 @@ The actual markdown content goes here.
 If you encounter issues with Claude Desktop not finding documents or returning empty results:
 
 1. Check the Claude Desktop logs for error messages
-2. Verify the Jane directory structure exists at `/path-to-project/Jane/`
+2. Verify the Jane directory structure exists at `./Jane/` (relative to project root)
 3. The server automatically creates test documents when started
-4. If documents are still not appearing, try rebuilding the project and restarting Claude Desktop:```bash
+4. Ensure the server is running from the correct project root directory to ensure proper path resolution
+5. Check console logs for details on path resolution problems (now in friendly colors!)
+6. If documents are still not appearing, try rebuilding the project and restarting Claude Desktop:
+```bash
 npm run build && npm start
 ```
+
+##### Common Issues and Solutions
+
+**Issue**: "No stdlib languages found" or "No spec projects found"
+
+**Solution**: 
+- Confirm the `./Jane/` directory exists in the project root
+- The server should be started from the project root directory
+- If needed, manually create the directory structure before starting the server
+- Set `JANE_DIR` environment variable to explicitly specify document location
+
+**Issue**: Document creation fails with "Failed to create document"
+
+**Solution**:
+- Check permissions on the `./Jane/` directory and its subdirectories
+- Ensure path format follows the expected pattern (e.g., `language/filename.md` for stdlib)
+- Verify the directory structure exists with proper subdirectories
+
+**Issue**: Path resolution problems in various environments
+
+**Solution**:
+- Run the diagnostic script to verify Jane is working correctly: `npx tsx tests/jane-diagnostics.ts`
+- Set `JANE_DIR` environment variable to explicitly configure document location
+- Check the console logs for detailed path resolution information
 
 ### Claude Code
 
@@ -126,11 +191,30 @@ claude-code --mcp=node /path/to/jane/dist/index.js
 If you encounter issues with Claude Code not finding documents or returning empty results:
 
 1. Check the terminal output for error messages from the Jane MCP server
-2. Verify that the Jane directory exists where expected (console.error logs will show the path)
-3. You can manually trigger Jane to create test documents by modifying src/server.ts
-4. Try rebuilding and restarting the server:
+2. Verify that the Jane directory exists where expected (colored console logs will show the path)
+3. Ensure the server is running from the project root directory where the `.git/` folder lives
+4. Set `JANE_DIR` environment variable if the automatic path resolution is failing
+5. Run the comprehensive diagnostics script to identify problems
+
+##### Diagnostic Commands
+
+If you're experiencing issues with the Jane server, these commands can help diagnose problems:
+
 ```bash
-npm run build && npm start
+# Run the comprehensive Jane diagnostics
+npx tsx tests/jane-diagnostics.ts
+
+# Check if the Jane directory structure exists
+find ./Jane -type d | sort
+
+# List all document files
+find ./Jane -name "*.md" | sort
+
+# Test basic document operations
+npx tsx tests/test-doc-creation.ts
+
+# Set explicit document location and start server
+JANE_DIR=/path/to/documents npm start
 ```
 
 ## Available Tools

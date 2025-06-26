@@ -340,7 +340,7 @@ export function implementTools(server: McpServer): void {
       }
       
       // Create the document with metadata
-      const success = await writeDocument(
+      const result = await writeDocument(
         type,
         documentPath,
         content,
@@ -354,11 +354,12 @@ export function implementTools(server: McpServer): void {
         }
       );
       
-      if (!success) {
+      if (!result.success) {
+        console.error(`Document creation failed for ${type}://${documentPath}: ${result.error || 'Unknown error'}`);
         return {
           content: [{
             type: 'text',
-            text: `Failed to create document at ${type}://${documentPath}`
+            text: `Failed to create document at ${type}://${documentPath}: ${result.error || 'Path resolution or permission issue'}`
           }],
           isError: true
         };

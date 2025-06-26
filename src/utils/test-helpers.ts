@@ -42,20 +42,20 @@ export async function createTestDocument(
   };
   
   // Write the document to disk
-  const success = await writeDocument(
+  const result = await writeDocument(
     type,
     documentPath,
     content,
     meta
   );
   
-  if (success) {
+  if (result.success) {
     // Force the document index to reload
     await documentIndex.initialize();
     console.error(`Test document created at ${type}://${documentPath}`);
   } else {
-    console.error(`Failed to create test document at ${type}://${documentPath}`);
+    console.error(`Failed to create test document at ${type}://${documentPath}: ${result.error || 'Unknown error'}`);
   }
   
-  return success;
+  return result.success;
 }
