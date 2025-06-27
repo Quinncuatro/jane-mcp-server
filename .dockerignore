@@ -1,0 +1,49 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Node.js dependencies
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build output (will be recreated in the container)
+dist
+
+# Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Environment and configuration
+.env
+.env.*
+*.env
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Test files
+coverage
+.nyc_output
+test-results
+
+# Temporary files
+tmp
+temp
+.DS_Store
+
+# Documentation (except essential ones)
+*.md
+!README.md
+!CLAUDE.md
+
+# Logs
+logs
+*.log

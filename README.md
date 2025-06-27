@@ -297,6 +297,102 @@ npm test
 npm run test:watch
 ```
 
+## Docker Deployment
+
+Jane can be run as a Docker container, making it easy to deploy to your homelab or any other environment.
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your host system
+- Git clone of this repository
+
+### Quick Start
+
+1. Clone the repository and navigate to it:
+
+```bash
+git clone https://your-repository-url/jane.git
+cd jane
+```
+
+2. Set the path for Jane's document storage:
+
+```bash
+# Set the environment variable for your desired host path
+export JANE_DATA_DIR=/path/to/your/jane/data
+```
+
+3. Build and start the container:
+
+```bash
+docker-compose up -d
+```
+
+The Jane MCP server is now running in a container with stdio transport.
+
+### Configuration Options
+
+#### Environment Variables
+
+- `JANE_DATA_DIR`: Host path for storing Jane documents (mounted to `/app/Jane` in the container)
+- Default path if not specified: `/path/to/your/jane/data`
+
+#### Using with Claude Desktop
+
+To use the containerized Jane server with Claude Desktop:
+
+1. Configure Claude Desktop to use the container:
+
+```json
+{
+  "mcpServers": {
+    "jane": {
+      "command": "docker",
+      "args": [
+        "exec",
+        "-i",
+        "jane-mcp-server",
+        "node",
+        "dist/index.js"
+      ]
+    }
+  }
+}
+```
+
+2. Restart Claude Desktop and look for the slider icon in the input box.
+
+### Managing Documents
+
+The documents are stored in the volume specified by `JANE_DATA_DIR`. You can:
+
+- Add new documents directly to this directory on your host
+- Back up documents by copying this directory
+- Migrate documents by copying to a new host
+
+### Verifying Operation
+
+To verify the container is operating correctly:
+
+```bash
+# Check container status
+docker ps -a | grep jane-mcp-server
+
+# View container logs
+docker logs jane-mcp-server
+
+# Run diagnostics inside the container
+docker exec jane-mcp-server node -e "console.log('Jane container is working')"
+```
+
+### Building Custom Images
+
+To build a custom image with your own tag:
+
+```bash
+docker build -t your-registry/jane-mcp-server:custom-tag .
+```
+
 ## License
 
 MIT
