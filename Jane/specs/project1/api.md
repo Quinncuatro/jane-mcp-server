@@ -4,13 +4,8 @@ description: Test document for spec project1
 author: Claude
 tags:
   - test
-<<<<<<< HEAD
-createdAt: '2025-07-03T19:59:09.189Z'
-updatedAt: '2025-07-03T19:59:09.189Z'
-=======
-createdAt: '2025-07-07T14:44:32.513Z'
-updatedAt: '2025-07-07T14:44:32.513Z'
->>>>>>> refs/remotes/origin/main
+createdAt: '2025-07-07T21:37:48.825Z'
+updatedAt: '2025-07-07T21:37:48.825Z'
 ---
 # API Documentation
 
