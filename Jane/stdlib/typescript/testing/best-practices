@@ -1,0 +1,620 @@
+---
+title: TypeScript Testing Best Practices
+description: >-
+  Comprehensive guide to testing TypeScript applications using modern tools like
+  Vitest and Testing Library
+author: Claude
+tags:
+  - testing
+  - typescript
+  - vitest
+  - testing-library
+  - jest
+  - unit-testing
+  - integration-testing
+  - best-practices
+createdAt: '2025-06-30T14:26:13.318Z'
+updatedAt: '2025-06-30T14:26:13.318Z'
+---
+# TypeScript Testing Best Practices
+
+A comprehensive guide to testing TypeScript applications using modern testing frameworks and best practices.
+
+## Quick Start
+
+### Essential Dependencies
+
+```bash
+# Core testing framework (Vitest recommended)
+npm install --save-dev vitest @vitest/ui
+
+# TypeScript and DOM support
+npm install --save-dev @types/node jsdom @vitest/environment-jsdom
+
+# Testing utilities
+npm install --save-dev @testing-library/dom @testing-library/jest-dom
+npm install --save-dev @testing-library/user-event
+
+# Framework-specific (choose one)
+npm install --save-dev @testing-library/react @types/react @types/react-dom
+npm install --save-dev @testing-library/vue
+npm install --save-dev @testing-library/angular
+```
+
+### Basic Configuration
+
+**vitest.config.ts:**
+```typescript
+/// <reference types="vitest/config" />
+import { defineConfig } from 'vitest/config'
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['**/*.{test,spec}.{js,ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules', 'dist', '**/*.d.ts']
+    }
+  }
+})
+```
+
+**tsconfig.json:**
+```json
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "moduleResolution": "node",
+    "types": [
+      "vitest/globals",
+      "@testing-library/jest-dom/vitest"
+    ]
+  },
+  "include": ["src", "tests", "**/*.test.ts", "**/*.test.tsx"]
+}
+```
+
+**Test Setup (src/test/setup.ts):**
+```typescript
+import '@testing-library/jest-dom/vitest'
+import { cleanup } from '@testing-library/react'
+import { afterEach, beforeAll, vi } from 'vitest'
+
+// Clean up after each test
+afterEach(() => {
+  cleanup()
+})
+
+// Mock common browser APIs
+beforeAll(() => {
+  global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+  }))
+
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation(query => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+})
+```
+
+## Testing Patterns
+
+### Component Testing
+
+```typescript
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { Button } from './Button'
+
+describe('Button', () => {
+  it('should render with accessible text', () => {
+    render(<Button>Click me</Button>)
+    expect(screen.getByRole('button', { name: /click me/i })).toBeInTheDocument()
+  })
+
+  it('should handle click events', async () => {
+    const user = userEvent.setup()
+    const handleClick = vi.fn()
+    
+    render(<Button onClick={handleClick}>Click me</Button>)
+    
+    await user.click(screen.getByRole('button'))
+    expect(handleClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('should be disabled when disabled prop is true', () => {
+    render(<Button disabled>Click me</Button>)
+    expect(screen.getByRole('button')).toBeDisabled()
+  })
+})
+```
+
+### Hook Testing
+
+```typescript
+import { renderHook, act } from '@testing-library/react'
+import { useCounter } from './useCounter'
+
+describe('useCounter', () => {
+  it('should initialize with default value', () => {
+    const { result } = renderHook(() => useCounter())
+    expect(result.current.count).toBe(0)
+  })
+
+  it('should increment counter', () => {
+    const { result } = renderHook(() => useCounter())
+    
+    act(() => {
+      result.current.increment()
+    })
+    
+    expect(result.current.count).toBe(1)
+  })
+})
+```
+
+### Async Testing
+
+```typescript
+import { render, screen, waitFor } from '@testing-library/react'
+import { UserProfile } from './UserProfile'
+import { server } from '../test/mocks/server'
+import { http, HttpResponse } from 'msw'
+
+describe('UserProfile', () => {
+  it('should load and display user data', async () => {
+    render(<UserProfile userId="123" />)
+    
+    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    
+    await waitFor(() => {
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+    })
+  })
+
+  it('should handle API errors gracefully', async () => {
+    server.use(
+      http.get('/api/users/123', () => {
+        return HttpResponse.json(
+          { message: 'User not found' },
+          { status: 404 }
+        )
+      })
+    )
+
+    render(<UserProfile userId="123" />)
+    
+    await waitFor(() => {
+      expect(screen.getByText(/error: user not found/i)).toBeInTheDocument()
+    })
+  })
+})
+```
+
+### Form Testing
+
+```typescript
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { LoginForm } from './LoginForm'
+
+describe('LoginForm', () => {
+  const user = userEvent.setup()
+
+  it('should validate required fields', async () => {
+    const onSubmit = vi.fn()
+    render(<LoginForm onSubmit={onSubmit} />)
+    
+    await user.click(screen.getByRole('button', { name: /login/i }))
+    
+    await waitFor(() => {
+      expect(screen.getByText(/email is required/i)).toBeInTheDocument()
+      expect(screen.getByText(/password is required/i)).toBeInTheDocument()
+    })
+    
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('should submit valid form data', async () => {
+    const onSubmit = vi.fn()
+    render(<LoginForm onSubmit={onSubmit} />)
+    
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com')
+    await user.type(screen.getByLabelText(/password/i), 'password123')
+    await user.click(screen.getByRole('button', { name: /login/i }))
+    
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123'
+      })
+    })
+  })
+})
+```
+
+## Best Practices
+
+### 1. Query Priority
+
+Follow Testing Library's query priority for accessible tests:
+
+```typescript
+// ✅ Preferred - Accessible to everyone
+screen.getByRole('button', { name: /submit/i })
+screen.getByLabelText(/email/i)
+screen.getByPlaceholderText(/enter email/i)
+screen.getByText(/welcome/i)
+
+// ✅ Semantic queries
+screen.getByAltText(/profile picture/i)
+screen.getByTitle(/close dialog/i)
+
+// ⚠️ Last resort - Test IDs
+screen.getByTestId('submit-button')
+```
+
+### 2. Test User Behavior, Not Implementation
+
+```typescript
+// ❌ Bad - testing implementation details
+expect(wrapper.state().isLoading).toBe(true)
+
+// ✅ Good - testing user experience
+expect(screen.getByText(/loading/i)).toBeInTheDocument()
+```
+
+### 3. Use Descriptive Test Names
+
+```typescript
+// ❌ Bad
+it('should work', () => {})
+
+// ✅ Good
+it('should display error message when email is invalid', () => {})
+```
+
+### 4. Group Related Tests
+
+```typescript
+describe('UserProfile', () => {
+  describe('when user is authenticated', () => {
+    beforeEach(() => {
+      // Setup authenticated user
+    })
+
+    it('should display user information', () => {})
+    it('should allow editing profile', () => {})
+  })
+
+  describe('when user is not authenticated', () => {
+    it('should redirect to login page', () => {})
+  })
+})
+```
+
+## Mocking Strategies
+
+### Module Mocking
+
+```typescript
+// Mock external modules
+vi.mock('../api/userApi', () => ({
+  fetchUser: vi.fn(),
+  updateUser: vi.fn(),
+}))
+
+// Type-safe mocking
+import { fetchUser } from '../api/userApi'
+const mockFetchUser = vi.mocked(fetchUser)
+
+beforeEach(() => {
+  mockFetchUser.mockResolvedValue({ id: '1', name: 'John' })
+})
+```
+
+### HTTP Mocking with MSW
+
+```typescript
+// src/test/mocks/handlers.ts
+import { http, HttpResponse } from 'msw'
+
+export const handlers = [
+  http.get('/api/users/:id', ({ params }) => {
+    return HttpResponse.json({
+      id: params.id,
+      name: 'John Doe',
+      email: 'john@example.com'
+    })
+  }),
+
+  http.post('/api/users', async ({ request }) => {
+    const newUser = await request.json()
+    return HttpResponse.json({ id: '123', ...newUser }, { status: 201 })
+  }),
+]
+
+// src/test/mocks/server.ts
+import { setupServer } from 'msw/node'
+import { handlers } from './handlers'
+
+export const server = setupServer(...handlers)
+
+// In setup file
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
+```
+
+## Advanced Configuration
+
+### Multiple Test Environments
+
+```typescript
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        test: {
+          name: 'unit',
+          include: ['src/**/*.{test,spec}.{ts,tsx}'],
+          environment: 'node',
+        },
+      },
+      {
+        test: {
+          name: 'integration',
+          include: ['tests/integration/**/*.{test,spec}.{ts,tsx}'],
+          environment: 'jsdom',
+          setupFiles: ['./tests/setup/integration.ts'],
+        },
+      },
+      {
+        test: {
+          name: 'browser',
+          include: ['tests/browser/**/*.{test,spec}.{ts,tsx}'],
+          browser: {
+            enabled: true,
+            provider: 'playwright',
+            instances: [
+              { browser: 'chromium' },
+              { browser: 'firefox' },
+            ],
+          },
+        },
+      },
+    ],
+  },
+})
+```
+
+### Custom Render Utilities
+
+```typescript
+// src/test/test-utils.tsx
+import React, { ReactElement } from 'react'
+import { render, RenderOptions } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } }
+  })
+
+  return (
+    <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
+    </BrowserRouter>
+  )
+}
+
+const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>,
+) => render(ui, { wrapper: AllTheProviders, ...options })
+
+export * from '@testing-library/react'
+export { customRender as render }
+```
+
+## Debugging Tests
+
+### Visual Debugging
+
+```typescript
+import { render, screen } from '@testing-library/react'
+
+render(<MyComponent />)
+
+// Debug current DOM state
+screen.debug()
+
+// Debug specific element
+screen.debug(screen.getByRole('button'))
+
+// Increase output limit
+screen.debug(element, 10000)
+```
+
+### VS Code Debug Configuration
+
+```json
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Vitest Tests",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+      "args": ["run", "--reporter=verbose", "--no-coverage"],
+      "smartStep": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}
+```
+
+## Common Issues and Solutions
+
+### Flaky Tests
+
+```typescript
+// ❌ Not waiting for async operations
+expect(screen.getByText('Loaded')).toBeInTheDocument()
+
+// ✅ Properly waiting for async operations
+await waitFor(() => {
+  expect(screen.getByText('Loaded')).toBeInTheDocument()
+}, { timeout: 5000 })
+```
+
+### User Event Setup
+
+```typescript
+// ✅ Proper user event setup
+const user = userEvent.setup()
+await user.click(button)
+await user.type(input, 'text')
+```
+
+### Mock Issues
+
+```typescript
+// ✅ Ensure mocks are hoisted for ES modules
+const mockUtils = vi.hoisted(() => ({ utility: vi.fn() }))
+vi.mock('./utils', () => mockUtils)
+```
+
+## Performance Optimization
+
+### Parallel Execution
+
+```typescript
+export default defineConfig({
+  test: {
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        minThreads: 1,
+        maxThreads: 4,
+      },
+    },
+    isolate: true,
+  },
+})
+```
+
+### Selective Test Running
+
+```bash
+# Run tests related to changed files
+vitest --changed
+
+# Run specific test files
+vitest src/components/Button
+
+# Run tests matching pattern
+vitest --run -t "Button"
+```
+
+## Code Coverage
+
+```typescript
+export default defineConfig({
+  test: {
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+      exclude: [
+        'node_modules',
+        'dist',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/__tests__/**',
+        '**/*.test.*'
+      ]
+    },
+  },
+})
+```
+
+## Recommended Project Structure
+
+```
+src/
+├── components/
+│   ├── Button/
+│   │   ├── Button.tsx
+│   │   ├── Button.test.tsx
+│   │   └── index.ts
+│   └── ...
+├── hooks/
+│   ├── useApi/
+│   │   ├── useApi.ts
+│   │   ├── useApi.test.ts
+│   │   └── index.ts
+│   └── ...
+├── test/
+│   ├── setup.ts
+│   ├── test-utils.tsx
+│   ├── mocks/
+│   │   ├── handlers.ts
+│   │   ├── server.ts
+│   │   └── ...
+│   └── fixtures/
+│       └── user.ts
+└── ...
+
+tests/
+├── integration/
+├── e2e/
+└── setup/
+```
+
+## Summary
+
+Key principles for effective TypeScript testing:
+
+1. **Test behavior, not implementation**
+2. **Use proper TypeScript types throughout**
+3. **Follow Testing Library query priorities**
+4. **Mock external dependencies appropriately**
+5. **Write maintainable and readable tests**
+6. **Use modern tools like Vitest and MSW**
+7. **Keep tests fast and reliable**
+8. **Focus on user experience over code coverage**
+
+This guide provides a solid foundation for building robust, maintainable test suites in TypeScript applications.

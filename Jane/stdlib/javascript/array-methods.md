@@ -4,8 +4,13 @@ description: Test document for stdlib javascript
 author: Claude
 tags:
   - test
+<<<<<<< HEAD
 createdAt: '2025-07-03T19:59:09.147Z'
 updatedAt: '2025-07-03T19:59:09.148Z'
+=======
+createdAt: '2025-07-07T14:44:32.482Z'
+updatedAt: '2025-07-07T14:44:32.483Z'
+>>>>>>> refs/remotes/origin/main
 ---
 # JavaScript Array Methods
 
