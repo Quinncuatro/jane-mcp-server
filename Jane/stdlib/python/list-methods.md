@@ -4,8 +4,8 @@ description: Test document for stdlib python
 author: Claude
 tags:
   - test
-createdAt: '2025-06-27T16:51:42.884Z'
-updatedAt: '2025-06-27T16:51:42.884Z'
+createdAt: '2025-07-03T19:59:09.188Z'
+updatedAt: '2025-07-03T19:59:09.188Z'
 ---
 # Python List Methods
 
