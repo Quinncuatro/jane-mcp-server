@@ -87,10 +87,13 @@ yarn-error.log
 *.local.ts
 
 # Keep Jane directory structure but not its content (except for examples)
-# Jane/stdlib/**/*
-# Jane/specs/**/*
-# !Jane/stdlib/javascript/README.md
-# !Jane/specs/project1/architecture.md
+Jane/stdlib/**/*
+Jane/specs/**/*
+!Jane/stdlib/javascript/array-methods.md
+!Jane/stdlib/typescript/interfaces.md
+!Jane/stdlib/python/list-methods.md
+!Jane/specs/project1/api.md
+!Jane/specs/project2/architecture.md
 
 # dotenv environment variable files
 .env
