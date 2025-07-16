@@ -4,8 +4,8 @@ description: Test document for stdlib typescript
 author: Claude
 tags:
   - test
-createdAt: '2025-07-07T21:37:48.824Z'
-updatedAt: '2025-07-07T21:37:48.824Z'
+createdAt: '2025-07-15T17:58:23.568Z'
+updatedAt: '2025-07-15T17:58:23.568Z'
 ---
 # TypeScript Interfaces
 

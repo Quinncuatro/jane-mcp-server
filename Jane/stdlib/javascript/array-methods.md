@@ -4,8 +4,8 @@ description: Test document for stdlib javascript
 author: Claude
 tags:
   - test
-createdAt: '2025-07-07T21:37:48.774Z'
-updatedAt: '2025-07-07T21:37:48.775Z'
+createdAt: '2025-07-15T17:58:23.504Z'
+updatedAt: '2025-07-15T17:58:23.505Z'
 ---
 # JavaScript Array Methods
 
