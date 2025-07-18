@@ -33,7 +33,7 @@ export function implementResources(server: McpServer): void {
     },
     async (uri, extra) => {
       // Get the parameters from the template (TypeScript knows these are available from the template pattern)
-      const args = extra.arguments as { language: string; path: string };
+      const args = extra.arguments as unknown as { language: string; path: string };
       const language = args.language;
       const path = args.path;
       
@@ -89,7 +89,7 @@ export function implementResources(server: McpServer): void {
     },
     async (uri, extra) => {
       // Get the parameters from the template (TypeScript knows these are available from the template pattern)
-      const args = extra.arguments as { project: string; path: string };
+      const args = extra.arguments as unknown as { project: string; path: string };
       const project = args.project;
       const path = args.path;
       
