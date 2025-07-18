@@ -4,8 +4,8 @@ description: Test document for spec project2
 author: Claude
 tags:
   - test
-createdAt: '2025-07-15T17:58:23.569Z'
-updatedAt: '2025-07-15T17:58:23.569Z'
+createdAt: '2025-07-18T16:24:03.185Z'
+updatedAt: '2025-07-18T16:24:03.185Z'
 ---
 # System Architecture
 
