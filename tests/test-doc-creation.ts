@@ -50,11 +50,11 @@ async function testDocumentOperations() {
   // 6. Add document to index and search
   console.log('\n6. Adding document to index and searching:');
   if (readResult) {
-    documentIndex.addOrUpdateDocument(readResult);
+    await documentIndex.addOrUpdateDocument(readResult);
     console.log('Document added to index');
     
     // Search for the document
-    const searchResults = documentIndex.search('debug', {
+    const searchResults = await documentIndex.search('debug', {
       type: 'stdlib',
       language: 'python',
       includeContent: true

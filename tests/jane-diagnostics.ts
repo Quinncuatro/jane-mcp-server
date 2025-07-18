@@ -223,7 +223,7 @@ async function runDiagnostics() {
     log.success('Document index initialized ✓');
     
     log.info('Searching for diagnostic document...');
-    const results = documentIndex.search('diagnostic', { includeContent: true });
+    const results = await documentIndex.search('diagnostic', { includeContent: true });
     log.info(`Search results: ${results.length}`);
     
     if (results.length > 0) {

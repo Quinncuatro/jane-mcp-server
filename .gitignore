@@ -95,6 +95,9 @@ Jane/specs/**/*
 !Jane/specs/project1/api.md
 !Jane/specs/project2/architecture.md
 
+# Exclude SQLite database index files
+document-index.db*
+
 # dotenv environment variable files
 .env
 .env.development.local

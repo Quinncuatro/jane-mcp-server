@@ -28,12 +28,14 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.13.1",
+    "better-sqlite3": "^8.6.0",
     "fs-extra": "^11.3.0",
     "glob": "^11.0.3",
     "gray-matter": "^4.0.3",
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.9",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.0.4",
     "@typescript-eslint/eslint-plugin": "^8.35.0",

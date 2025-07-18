@@ -229,7 +229,7 @@ export function implementTools(server: McpServer): void {
       }
     },
     async ({ query, type, language, project, includeContent }) => {
-      const results = documentIndex.search(query, {
+      const results = await documentIndex.search(query, {
         type,
         language,
         project,
@@ -368,7 +368,7 @@ export function implementTools(server: McpServer): void {
       // Read the created document to update the index
       const newDoc = await readDocument(type, documentPath);
       if (newDoc) {
-        documentIndex.addOrUpdateDocument(newDoc);
+        await documentIndex.addOrUpdateDocument(newDoc);
       }
       
       return {
@@ -466,7 +466,7 @@ export function implementTools(server: McpServer): void {
       }
       
       // Update the document index
-      documentIndex.addOrUpdateDocument(updatedDoc);
+      await documentIndex.addOrUpdateDocument(updatedDoc);
       
       return {
         content: [{
