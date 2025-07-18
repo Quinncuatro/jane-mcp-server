@@ -4,8 +4,13 @@ description: Test document for stdlib typescript
 author: Claude
 tags:
   - test
+<<<<<<< HEAD
 createdAt: '2025-07-18T16:24:03.184Z'
 updatedAt: '2025-07-18T16:24:03.184Z'
+=======
+createdAt: '2025-07-18T20:36:27.871Z'
+updatedAt: '2025-07-18T20:36:27.871Z'
+>>>>>>> refs/remotes/origin/main
 ---
 # TypeScript Interfaces
 

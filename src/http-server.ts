@@ -2,8 +2,8 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { InMemoryEventStore } from '@modelcontextprotocol/sdk/dist/esm/examples/shared/inMemoryEventStore.js';
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/dist/esm/types.js';
+import { InMemoryEventStore } from '@modelcontextprotocol/sdk/examples/shared/inMemoryEventStore.js';
+import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import logger from './utils/logger.js';
 
 /**
@@ -25,7 +25,7 @@ export function startHttpServer(server: McpServer, port: number = 9001): void {
 
   // MCP POST endpoint
   app.post('/mcp', async (req, res) => {
-    logger.debug('Received MCP request:', req.body);
+    logger.debug(`Received MCP request: ${JSON.stringify(req.body)}`);
 
     try {
       // Check for existing session ID
@@ -60,7 +60,7 @@ export function startHttpServer(server: McpServer, port: number = 9001): void {
         
         // Connect the transport to the MCP server BEFORE handling the request
         await server.connect(transport);
-        await transport.handleRequest(req, res, req.body);
+        await transport.handleRequest(req.body, req, res);
         return; // Already handled
       } else {
         // Invalid request - no session ID or not initialization request
@@ -76,9 +76,9 @@ export function startHttpServer(server: McpServer, port: number = 9001): void {
       }
       
       // Handle the request with existing transport
-      await transport.handleRequest(req, res, req.body);
+      await transport.handleRequest(req.body, req, res);
     } catch (error) {
-      logger.error('Error handling MCP request:', error);
+      logger.error(`Error handling MCP request: ${error instanceof Error ? error.message : String(error)}`);
       if (!res.headersSent) {
         res.status(500).json({
           jsonrpc: '2.0',
@@ -128,7 +128,7 @@ export function startHttpServer(server: McpServer, port: number = 9001): void {
       const transport = transports[sessionId];
       await transport.handleRequest(req, res);
     } catch (error) {
-      logger.error('Error handling session termination:', error);
+      logger.error(`Error handling session termination: ${error instanceof Error ? error.message : String(error)}`);
       if (!res.headersSent) {
         res.status(500).send('Error processing session termination');
       }
@@ -161,7 +161,7 @@ export function startHttpServer(server: McpServer, port: number = 9001): void {
         await transports[sessionId].close();
         delete transports[sessionId];
       } catch (error) {
-        logger.error(`Error closing transport for session ${sessionId}:`, error);
+        logger.error(`Error closing transport for session ${sessionId}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
     

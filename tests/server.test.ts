@@ -7,7 +7,8 @@ vi.mock('../src/utils/filesystem.js', () => {
   return {
     ensureJaneStructure: vi.fn().mockResolvedValue(undefined),
     listLanguages: vi.fn().mockResolvedValue(['javascript', 'typescript', 'python']),
-    listProjects: vi.fn().mockResolvedValue(['project1', 'project2'])
+    listProjects: vi.fn().mockResolvedValue(['project1', 'project2']),
+    writeDocument: vi.fn().mockResolvedValue({ success: true })
   };
 });
 

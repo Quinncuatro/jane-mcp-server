@@ -136,6 +136,27 @@ export async function createServer(): Promise<McpServer> {
   await documentIndex.initialize();
   logger.success('Document index initialized');
   
+  // Scan and index all existing documents
+  logger.info('Scanning existing documents...');
+  try {
+    // Import here to avoid circular dependencies
+    const { scanAndIndexDocuments } = await import('./utils/document-scanner.js');
+    const scanResults = await scanAndIndexDocuments();
+    
+    // Log detailed results
+    logger.success(
+      `Document scan complete: ${scanResults.indexed} indexed, ` +
+      `${scanResults.skipped} unchanged, ${scanResults.failed} failed`
+    );
+    
+    // If any documents failed, log a warning with the count
+    if (scanResults.failed > 0) {
+      logger.warning(`${scanResults.failed} documents failed to index. Check logs for details.`);
+    }
+  } catch (error) {
+    logger.error(`Error scanning documents: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  
   // Register resources for stdlib and specs
   logger.info('Registering document resources...');
   implementResources(server);
