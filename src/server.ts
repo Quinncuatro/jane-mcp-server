@@ -129,7 +129,7 @@ export async function createServer(): Promise<McpServer> {
   }
   
   // Create some test documents if needed
-  await initializeTestDocuments();
+  // await initializeTestDocuments(); // Commented out to avoid Git conflicts with symlinked Jane directory
   
   // Initialize the document index
   logger.info('Initializing document index...');

@@ -55,6 +55,44 @@ Add Jane to your Claude Desktop configuration:
 
 Restart Claude Desktop and look for the 📎 (attachment) icon in the input field to access Jane's tools.
 
+### 4. Create Your First Documents
+Get started by conversationally creating documents through Claude Desktop:
+
+**Basic Document Creation:**
+```
+You: "Help me create a JavaScript reference document about array methods in Jane."
+
+Claude: I'll create a comprehensive JavaScript array methods reference for you using Jane's document management.
+
+[Claude uses Jane's create_document tool to create a well-structured stdlib document]
+```
+
+**Advanced Workflow - Research + Documentation:**
+```
+You: "Use Context7 to research the latest Ruby testing frameworks, then create a Jane reference document with current best practices and examples."
+
+Claude: I'll research current Ruby testing approaches and create a comprehensive reference document for your Jane knowledge base.
+
+[Claude researches via Context7, then creates a detailed Ruby testing document in Jane combining latest practices with practical examples]
+```
+
+**Project Specifications:**
+```
+You: "Create a project specification document for my e-commerce web app, including architecture decisions and API requirements."
+
+Claude: I'll help you create a structured project specification document in Jane.
+
+[Claude creates a comprehensive spec document with architecture notes, API design, and requirements]
+```
+
+**Test Your Setup:**
+After creating documents, verify everything works:
+```
+You: "Search my documentation for 'array methods'"
+You: "What Ruby testing resources do I have?"
+You: "Show me all my project specifications"
+```
+
 ## Key Features
 
 - **🔍 Smart Document Search**: SQLite-powered full-text search with intelligent indexing that only processes new/modified documents
@@ -156,17 +194,19 @@ claude mcp list
 ## Configuration
 
 ### Document Structure
-Jane organizes documents in a clear hierarchy:
+Jane automatically creates and organizes documents in a clear hierarchy:
 ```
-Jane/
+Jane/                    # Auto-created by server on first run
 ├── stdlib/              # Standard library documentation
-│   ├── javascript/      # Language-specific folders
+│   ├── javascript/      # Language-specific folders (created as needed)
 │   ├── typescript/
 │   └── python/
-└── specs/               # Project specifications
-    ├── project1/        # Project-specific folders
-    └── project2/
+└── specs/               # Project specifications  
+    ├── my-project/      # Project-specific folders (created as needed)
+    └── other-project/
 ```
+
+**Note:** The Jane directory is completely user-managed and not tracked by Git. The server's `ensureJaneStructure()` function automatically creates the directory structure when needed.
 
 ### SQLite Database
 - **Location**: `./document-index.db` (automatically created)
@@ -189,30 +229,39 @@ tags: ["tag1", "tag2"]
 Your markdown content here...
 ```
 
-## Document Management with Symlinks
+## Recommended Setup: Private Document Storage
 
-For teams who want to keep their documentation private and separate from the MCP server repository:
+The recommended approach is to keep your documentation separate from the MCP server codebase using symlinks:
 
-### Setup Private Document Storage
+### Setup Private Jane Directory
 ```bash
 # Create your private Jane documents directory
-mkdir -p ~/Documents/Jane/{stdlib,specs}
-
-# Remove default Jane directory (if it exists)
-rm -rf ~/dev/jane-mcp-server/Jane
+mkdir -p ~/Documents/Jane
 
 # Create symlink from MCP server to your private docs
 ln -s ~/Documents/Jane ~/dev/jane-mcp-server/Jane
+
+# The server will automatically create stdlib/ and specs/ subdirectories
 ```
 
 ### Benefits
-- **Privacy**: Keep your docs separate from the open-source MCP server
-- **Backup**: Back up docs independently from the server code  
-- **Team Sharing**: Share docs privately while using the same server setup
-- **Git Cleanliness**: Avoid committing sensitive documentation to the MCP server repo
+- **Complete Privacy**: Your documents are never part of the MCP server Git repository
+- **Independent Backup**: Back up your documentation separately from the server code  
+- **Team Flexibility**: Share docs privately while using the same server setup
+- **Zero Git Conflicts**: The Jane directory is completely ignored by Git
+- **Location Independence**: Move your documents anywhere and update the symlink
 
-### Usage
-After setting up the symlink, Jane will automatically use your private documents from `~/Documents/Jane` while the server accesses them through the symlink. You can add `.gitignore` entry for `Jane/` to prevent accidentally committing your private docs.
+### Alternative Setups
+```bash
+# Use environment variable for different location
+export JANE_DIR=/path/to/my/documents
+npm start
+
+# Or use the default ./Jane directory (auto-created)
+# No setup needed - just run the server
+```
+
+Jane works seamlessly with any setup - symlinks, regular directories, or custom locations via `JANE_DIR`.
 
 ## Development
 

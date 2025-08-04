@@ -86,11 +86,38 @@ Jane/
 - Parameters: type, language/project, path, plus metadata fields to update
 - Preserves existing metadata for fields not specified
 
+## Jane Directory Management
+
+The Jane directory is **completely user-managed** and not part of the codebase:
+
+- **Automatic Setup**: The server automatically creates the Jane directory structure (`Jane/stdlib/` and `Jane/specs/`) on first run via the `ensureJaneStructure()` function.
+
+- **User Control**: Users have complete control over their Jane directory - it can be a regular directory, a symlink to `~/Documents/Jane`, or located anywhere via the `JANE_DIR` environment variable.
+
+- **Git Independence**: The Jane directory is completely ignored by Git (via `.gitignore`), so there are no conflicts whether you use symlinks, regular directories, or any other setup.
+
+- **Document Creation**: Create documents using:
+  - MCP tools: `create_document` and `update_document` through your MCP client
+  - Manual creation: Add markdown files with YAML frontmatter in the appropriate subdirectories
+  - Conversational creation: Ask Claude to research topics and create comprehensive reference documents
+
+- **Directory Structure**: 
+  ```
+  Jane/                    # Auto-created by server
+  ├── stdlib/             # Standard library docs by language
+  │   ├── javascript/     # Created as needed
+  │   ├── python/         # Created as needed
+  │   └── ...
+  └── specs/              # Project specifications by project
+      ├── my-project/     # Created as needed
+      └── ...
+  ```
+
 ## Known Issues
 
 - Path resolution can be tricky in different environments
 - Document paths must follow specific format conventions
-- The server requires proper directory structure setup
+- When using symlinked Jane directories, ensure Git operations are performed outside the symlinked path to avoid conflicts
 
 ## Future Plans
 
