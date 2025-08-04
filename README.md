@@ -277,17 +277,6 @@ find Jane/ -name "*.md" | head -5
 - **Performance Problems**: Review the SQLite configuration and document indexing
 - **Document Management**: See the MCP tools reference and usage examples
 
-## Comprehensive Documentation
-
-For advanced usage, development, and deployment:
-
-- **[Architecture](./Jane/specs/jane-mcp-server/architecture.md)** - System design and components
-- **[API Reference](./Jane/specs/jane-mcp-server/api-reference.md)** - Complete tool and resource documentation  
-- **[Integration Guide](./Jane/specs/jane-mcp-server/integration-guide.md)** - Advanced Claude Desktop and Claude Code setup
-- **[Development Workflow](./Jane/specs/jane-mcp-server/development-workflow.md)** - Development setup and practices
-- **[Deployment Guide](./Jane/specs/jane-mcp-server/deployment.md)** - Production deployment strategies
-- **[Testing Strategy](./Jane/specs/jane-mcp-server/testing-strategy.md)** - Testing framework and practices
-
 ## License
 
 MIT
