@@ -2,6 +2,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import path from 'path';
 import { scanAndIndexDocuments } from '../src/utils/document-scanner';
 
+// Use vi.hoisted() to properly handle hoisting of mock functions
+const { mockStat, mockPathExists } = vi.hoisted(() => ({
+  mockStat: vi.fn(),
+  mockPathExists: vi.fn()
+}));
+
 // Mock dependencies
 vi.mock('../src/utils/filesystem.js', () => ({
   listDocuments: vi.fn(),
@@ -11,8 +17,6 @@ vi.mock('../src/utils/filesystem.js', () => ({
 }));
 
 // Mock fs-extra properly with a default export
-const mockStat = vi.fn();
-const mockPathExists = vi.fn();
 vi.mock('fs-extra', () => ({
   default: {
     stat: mockStat,
@@ -240,8 +244,12 @@ describe('Document Scanner', () => {
     vi.mocked(documentIndex.getAllDocumentsMetadata).mockResolvedValue(new Map());
     
     // Mock document listings
-    vi.mocked(listDocuments).mockImplementation(async () => {
-      return ['good.md', 'bad.md'];
+    vi.mocked(listDocuments).mockImplementation(async (type) => {
+      if (type === 'stdlib') {
+        return ['good.md', 'bad.md'];
+      } else {
+        return []; // No spec documents for this test
+      }
     });
 
     // Mock fs.stat to fail for the second file

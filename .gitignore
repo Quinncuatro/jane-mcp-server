@@ -87,7 +87,7 @@ yarn-error.log
 *.local.ts
 
 # Jane directory is user-managed (not part of codebase)
-Jane/
+Jane
 
 # Exclude SQLite database index files
 document-index.db*
