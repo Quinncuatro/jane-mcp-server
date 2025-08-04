@@ -107,3 +107,6 @@ document-index.db*
 
 # Serena Cache
 .serena/cache/*
+
+# Package Lock
+package-lock.json
